@@ -51,11 +51,13 @@ class ai_agent():
 			player_top = player[0][1]
 
 
-			q=0
-			for i in range(1000):
-				q+=1
+			#q=0
+			#for i in range(1000):
+			#	q+=1
 
 			self.encode_map(bullets, enemies, tiles, player)
+
+			# print player
 
 			# self.print_encoded_map()
 			# raw_input()
@@ -75,7 +77,7 @@ class ai_agent():
 			move_dir = random.randint(0,4)
 			keep_action = 1
 
-			# 1. check nearest 6 blocks in every direction ( bullet, tank )
+			# 1. check nearest 3 blocks in every direction ( bullet, tank )
 			# get encoded player position
 			encoded_player_left = player_left / 32
 			encoded_player_top = player_top / 32
@@ -85,7 +87,7 @@ class ai_agent():
 			for i in range(4):
 				current_left = encoded_player_left
 				current_top = encoded_player_top
-				for j in range(6):
+				for j in range(3):
 					current_left = current_left + self.dir_left[i]
 					current_top = current_top + self.dir_top[i]
 					if (current_left < 0 or current_left >= 13 or current_top < 0 or current_top >= 13):
@@ -100,7 +102,7 @@ class ai_agent():
 			for i in range(4):
 				current_left = encoded_player_left
 				current_top = encoded_player_top
-				for j in range(6):
+				for j in range(3):
 					current_left = current_left + self.dir_left[i]
 					current_top = current_top + self.dir_top[i]
 					if (current_left < 0 or current_left >= 13 or current_top < 0 or current_top >= 13):
@@ -116,15 +118,44 @@ class ai_agent():
 			# get player's direction
 			player_dir = player[1]
 
-			if ((player_dir == 0 or player_dir == 2) and player_top % 32 != 0):
-				print "adjust top"
-				self.Update_Strategy(c_control, 0, player_dir, keep_action)
+			adjust_top = encoded_player_top * 32
+			adjust_left = encoded_player_left * 32
+
+			# print "player_top: %d,  player_left: %d" %(player_top, player_left)
+
+			up
+			if (player_top - adjust_top < 6):
+				# print("adjust up")
+				self.Update_Strategy(c_control, 0, 0, keep_action)
 				continue
 			
-			elif ((player_dir == 1 or player_dir == 3) and player_left % 32 != 0):
-				print "adjust left"
-				self.Update_Strategy(c_control, 0, player_dir, keep_action)
+			# down
+			elif (player_top - adjust_top < -6):
+				# print("adjust down")
+				self.Update_Strategy(c_control, 0, 2, keep_action)
 				continue
+			
+			# left
+			elif (player_left - adjust_left > 6):
+				# print("adjust left")
+				self.Update_Strategy(c_control, 0, 3, keep_action)
+				continue
+			
+			# right
+			elif (player_left - adjust_left < -6):
+				# print("adjust right")
+				self.Update_Strategy(c_control, 0, 1, keep_action)
+				continue
+
+			# if ((player_dir == 0 or player_dir == 2) and (player_top % 32 < 27 and player_top % 32 > 5)):
+			# 	print "adjust top. player_top: %d,  player_left: %d" %(player_top, player_left)
+			# 	self.Update_Strategy(c_control, 0, player_dir, keep_action)
+			# 	continue
+			# 
+			# elif ((player_dir == 1 or player_dir == 3) and (player_left % 32 < 27 and player_left % 32 > 5)):
+			# 	print "adjust left. player_top: %d,  player_left: %d" %(player_top, player_left)
+			# 	self.Update_Strategy(c_control, 0, player_dir, keep_action)
+			# 	continue
 
 			#else
 			#	if (
@@ -138,6 +169,7 @@ class ai_agent():
 				self.Update_Strategy(c_control, 0, move, keep_action)
 			#keep_action = 0
 			
+
 			#-----------
 			# self.Update_Strategy(c_control,shoot,move_dir,keep_action)
 		#------------------------------------------------------------------------------------------------------
@@ -177,7 +209,7 @@ class ai_agent():
 			visited[current_top][current_left] = True
 
 			if (self.encoded_map[current_top][current_left] == 'E'):
-				print "found enemy"
+				# print "found enemy"
 				result_move = direction
 				return result_move
 
