@@ -16,6 +16,9 @@ class ai_agent():
 		self.encoded_map = []
 		self.map_width = 13
 		self.map_height = 13
+		self.encoded_player_top = -1
+		self.encoded_player_left = -1
+
 		#               up right down left
 		self.dir_top =  [-1, 0,  1,   0]
 		self.dir_left = [0,  1,  0,  -1]
@@ -81,16 +84,16 @@ class ai_agent():
 
 			
 			# get encoded player position
-			encoded_player_left = player_left / 32
-			encoded_player_top = player_top / 32
+			self.encoded_player_left = player_left / 32
+			self.encoded_player_top = player_top / 32
 
 			# 1. check if the position of player's tank is on the multiplier of 32
 
 			# get player's direction
 			player_dir = player[1]
 
-			adjust_top = encoded_player_top * 32
-			adjust_left = encoded_player_left * 32
+			adjust_top = self.encoded_player_top * 32
+			adjust_left = self.encoded_player_left * 32
 
 			# print "player_top: %d,  player_left: %d" %(player_top, player_left)
 
@@ -106,33 +109,18 @@ class ai_agent():
 
 			# 2. check nearest 5 blocks in every direction ( bullet, tank )
 			# check for bullets
-			for i in range(4):
-				current_left = encoded_player_left
-				current_top = encoded_player_top
-				for j in range(5):
-					current_left = current_left + self.dir_left[i]
-					current_top = current_top + self.dir_top[i]
-					if (current_left < 0 or current_left >= 13 or current_top < 0 or current_top >= 13):
-						break
-					if (self.encoded_map[current_top][current_left] == 'B'):
-						print "found bullet"
-						self.Update_Strategy(c_control, 1, i, 1)
-						continue
-
+				
+			move = self.check_bullets(bullets)
+			if (move != -1):
+				self.Update_Strategy(c_control, 1, move, 1)
+				continue
 
 			# check for tanks
-			for i in range(4):
-				current_left = encoded_player_left
-				current_top = encoded_player_top
-				for j in range(5):
-					current_left = current_left + self.dir_left[i]
-					current_top = current_top + self.dir_top[i]
-					if (current_left < 0 or current_left >= 13 or current_top < 0 or current_top >= 13):
-						break
-					if (self.encoded_map[current_top][current_left] == 'E'):
-						print "found tank"
-						self.Update_Strategy(c_control, 1, i, 1)
-						continue
+			move = self.check_tanks()
+			if (move != -1):
+				self.Update_Strategy(c_control, 1, move, 1)
+				continue
+
 
 			# 3. BFS
 			move = self.bfs()
@@ -146,6 +134,40 @@ class ai_agent():
 			#-----------
 			# self.Update_Strategy(c_control,shoot,move_dir,keep_action)
 		#------------------------------------------------------------------------------------------------------
+
+	def check_bullets(self, bullets):
+		for bullet in bullets:
+			encoded_bullet_left = bullet[0][0] / 32
+			encoded_bullet_top = bullet[0][1] / 32
+			bullet_dir = bullet[1]
+
+			if (encoded_bullet_left / 32 == self.encoded_player_left / 32):
+				if (encoded_bullet_top < self.encoded_player_top and bullet_dir == 2):
+					return 0
+				elif (encoded_bullet_top > self.encoded_player_top and bullet_dir == 0):
+					return 2
+
+			elif (bullet[0][1] / 32 == self.encoded_player_top / 32):
+				if (encoded_bullet_left < self.encoded_player_left and bullet_dir == 1):
+					return 3
+				elif (encoded_bullet_left > self.encoded_player_left and bullet_dir == 3):
+					return 1
+
+		return -1
+
+	def check_tanks(self):
+		for i in range(4):
+			current_left = self.encoded_player_left
+			current_top = self.encoded_player_top
+			for j in range(5):
+				current_left = current_left + self.dir_left[i]
+				current_top = current_top + self.dir_top[i]
+				if (current_left < 0 or current_left >= 13 or current_top < 0 or current_top >= 13):
+					break
+				if (self.encoded_map[current_top][current_left] == 'E'):
+					return i
+
+		return -1
 
 	def bfs(self):
 		q = Queue.Queue()
