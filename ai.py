@@ -77,12 +77,32 @@ class ai_agent():
 			move_dir = random.randint(0,4)
 			keep_action = 1
 
-			# 1. check nearest 3 blocks in every direction ( bullet, tank )
+			
 			# get encoded player position
 			encoded_player_left = player_left / 32
 			encoded_player_top = player_top / 32
 
-			
+			# 2. check if the position of player's tank is on the multiplier of 32
+
+			# get player's direction
+			player_dir = player[1]
+
+			adjust_top = encoded_player_top * 32
+			adjust_left = encoded_player_left * 32
+
+			# print "player_top: %d,  player_left: %d" %(player_top, player_left)
+
+			if (player_dir == 1 or player_dir == 3):
+				if (player_top - adjust_top > 3):
+					self.Update_Strategy(c_control, 0, 0, keep_action)
+					continue
+
+			elif (player_dir == 0 or player_dir == 2):
+				if (player_left - adjust_left > 3):
+					self.Update_Strategy(c_control, 0, 3, keep_action)
+					continue
+
+			# 1. check nearest 3 blocks in every direction ( bullet, tank )
 			# check for bullets
 			for i in range(4):
 				current_left = encoded_player_left
@@ -113,25 +133,7 @@ class ai_agent():
 						continue
 
 
-			# 2. check if the position of player's tank is on the multiplier of 32
-
-			# get player's direction
-			player_dir = player[1]
-
-			adjust_top = encoded_player_top * 32
-			adjust_left = encoded_player_left * 32
-
-			# print "player_top: %d,  player_left: %d" %(player_top, player_left)
-
-			if (player_dir == 1 or player_dir == 3):
-				if (player_top - adjust_top > 3):
-					self.Update_Strategy(c_control, 0, 0, keep_action)
-					continue
-
-			elif (player_dir == 0 or player_dir == 2):
-				if (player_left - adjust_left > 3):
-					self.Update_Strategy(c_control, 0, 3, keep_action)
-					continue
+			
 
 			# up
 			# if (player_top - adjust_top < 6):
