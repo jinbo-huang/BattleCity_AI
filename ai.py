@@ -7,6 +7,7 @@ import Queue
 class ai_agent():
 	mapinfo = []
 	encoded_map = []
+	dangerous_map = []
 	#map_width = 0
 	#map_height = 0
 
@@ -18,6 +19,9 @@ class ai_agent():
 		#               up right down left
 		self.dir_top =  [-1, 0,  1,   0]
 		self.dir_left = [0,  1,  0,  -1]
+
+		#	dangerous location (bullets may pass in near time)
+		self.dangerous_map = []
 
 	# rect:					[left, top, width, height]
 	# rect_type:			0:empty 1:brick 2:steel 3:water 4:grass 5:froze
@@ -55,6 +59,7 @@ class ai_agent():
 			#	q+=1
 
 			self.encode_map(bullets, enemies, tiles, player)
+			self.generate_dangerous_map(bullets)
 
 			# print player
 
@@ -99,18 +104,18 @@ class ai_agent():
 					self.Update_Strategy(c_control, 0, 3, keep_action)
 					continue
 
-			# 2. check nearest 3 blocks in every direction ( bullet, tank )
+			# 2. check nearest 5 blocks in every direction ( bullet, tank )
 			# check for bullets
 			for i in range(4):
 				current_left = encoded_player_left
 				current_top = encoded_player_top
-				for j in range(3):
+				for j in range(5):
 					current_left = current_left + self.dir_left[i]
 					current_top = current_top + self.dir_top[i]
 					if (current_left < 0 or current_left >= 13 or current_top < 0 or current_top >= 13):
 						break
 					if (self.encoded_map[current_top][current_left] == 'B'):
-						# print "found bullet"
+						print "found bullet"
 						self.Update_Strategy(c_control, 1, i, 1)
 						continue
 
@@ -119,13 +124,13 @@ class ai_agent():
 			for i in range(4):
 				current_left = encoded_player_left
 				current_top = encoded_player_top
-				for j in range(3):
+				for j in range(5):
 					current_left = current_left + self.dir_left[i]
 					current_top = current_top + self.dir_top[i]
 					if (current_left < 0 or current_left >= 13 or current_top < 0 or current_top >= 13):
 						break
 					if (self.encoded_map[current_top][current_left] == 'E'):
-						# print "found tank"
+						print "found tank"
 						self.Update_Strategy(c_control, 1, i, 1)
 						continue
 
@@ -155,13 +160,15 @@ class ai_agent():
 					player_left = j
 					break
 
+		# record whether the position has been visited
 		visited = [[False for x in range(self.map_width)] for y in range(self.map_height)]
 		
 		visited[player_top][player_left] = True
+		# put first 4 block into queue.
 		for i in range(4):
 			new_top = player_top + self.dir_top[i]
 			new_left = player_left + self.dir_left[i]
-			if (new_left < 0 or new_left >= 13 or new_top < 0 or new_top >= 13):
+			if (new_left < 0 or new_left >= 13 or new_top < 0 or new_top >= 13 or self.dangerous_map[new_top][new_left] == True):
 				continue
 			if (self.encoded_map[new_top][new_left] != '@'):
 				q.put([new_top, new_left, i])
@@ -219,6 +226,33 @@ class ai_agent():
 		result[player_top / 32][player_left / 32] = 'P'
 		
 		self.encoded_map = result
+
+	def generate_dangerous_map(self, bullets):
+		result = [[False for x in range(self.map_width)] for y in range(self.map_height)]
+		
+		for bullet in bullets:
+			b_left = bullet[0][0] / 32
+			b_top = bullet[0][1] / 32
+			b_dir = bullet[1]
+
+			# This situation happened before, but still reason is unknown.
+			if (b_left < 0 or b_left >= 13 or b_top < 0 or b_top >= 13):
+				continue;
+			
+			result[b_top][b_left] = True
+
+			current_top = b_top
+			current_left = b_left
+
+			# mark next 3 blocks as dangerous
+			for i in range(2):
+				current_top = current_top + self.dir_top[b_dir]
+				current_left = current_left + self.dir_left[b_dir]
+				if (current_left < 0 or current_left >= 13 or current_top < 0 or current_top >= 13):
+					continue;
+				result[current_top][current_left] = True
+
+		self.dangerous_map = result
 
 	def print_encoded_map(self):
 		for i in range(13):
