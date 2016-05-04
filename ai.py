@@ -50,7 +50,6 @@ class ai_agent():
 			player_left = player[0][0]
 			player_top = player[0][1]
 
-
 			#q=0
 			#for i in range(1000):
 			#	q+=1
@@ -61,8 +60,7 @@ class ai_agent():
 
 			# self.print_encoded_map()
 			# raw_input()
-			#print "player left:%s" %(player_left)
-			#print "player top:%s" %(player_top)
+	
 
 			# print self.mapinfo[0]
 			# time.sleep(0.001)	
@@ -70,8 +68,7 @@ class ai_agent():
 			#q=0
 			#for i in range(10000000):
 			#	q+=1
-			
-			
+
 
 			shoot = random.randint(0,1)
 			move_dir = random.randint(0,4)
@@ -82,7 +79,7 @@ class ai_agent():
 			encoded_player_left = player_left / 32
 			encoded_player_top = player_top / 32
 
-			# 2. check if the position of player's tank is on the multiplier of 32
+			# 1. check if the position of player's tank is on the multiplier of 32
 
 			# get player's direction
 			player_dir = player[1]
@@ -102,7 +99,7 @@ class ai_agent():
 					self.Update_Strategy(c_control, 0, 3, keep_action)
 					continue
 
-			# 1. check nearest 3 blocks in every direction ( bullet, tank )
+			# 2. check nearest 3 blocks in every direction ( bullet, tank )
 			# check for bullets
 			for i in range(4):
 				current_left = encoded_player_left
@@ -131,47 +128,6 @@ class ai_agent():
 						# print "found tank"
 						self.Update_Strategy(c_control, 1, i, 1)
 						continue
-
-
-			
-
-			# up
-			# if (player_top - adjust_top < 6):
-			# 	# print("adjust up")
-			# 	self.Update_Strategy(c_control, 0, 0, keep_action)
-			# 	continue
-			# 
-			# # down
-			# elif (player_top - adjust_top < -6):
-			# 	# print("adjust down")
-			# 	self.Update_Strategy(c_control, 0, 2, keep_action)
-			# 	continue
-			# 
-			# # left
-			# elif (player_left - adjust_left > 6):
-			# 	# print("adjust left")
-			# 	self.Update_Strategy(c_control, 0, 3, keep_action)
-			# 	continue
-			# 
-			# # right
-			# elif (player_left - adjust_left < -6):
-			# 	# print("adjust right")
-			# 	self.Update_Strategy(c_control, 0, 1, keep_action)
-			# 	continue
-
-			# if ((player_dir == 0 or player_dir == 2) and (player_top % 32 < 27 and player_top % 32 > 5)):
-			# 	print "adjust top. player_top: %d,  player_left: %d" %(player_top, player_left)
-			# 	self.Update_Strategy(c_control, 0, player_dir, keep_action)
-			# 	continue
-			# 
-			# elif ((player_dir == 1 or player_dir == 3) and (player_left % 32 < 27 and player_left % 32 > 5)):
-			# 	print "adjust left. player_top: %d,  player_left: %d" %(player_top, player_left)
-			# 	self.Update_Strategy(c_control, 0, player_dir, keep_action)
-			# 	continue
-
-			#else
-			#	if (
-
 
 			# 3. BFS
 			move = self.bfs()
