@@ -17,7 +17,7 @@ class ai_agent():
 		self.map_height = 13
 		#               up right down left
 		self.dir_top =  [-1, 0,  1,   0]
-		self.dir_left = [0, 1,  0,   -1]
+		self.dir_left = [0,  1,  0,  -1]
 
 	# rect:					[left, top, width, height]
 	# rect_type:			0:empty 1:brick 2:steel 3:water 4:grass 5:froze
@@ -123,29 +123,39 @@ class ai_agent():
 
 			# print "player_top: %d,  player_left: %d" %(player_top, player_left)
 
-			up
-			if (player_top - adjust_top < 6):
-				# print("adjust up")
-				self.Update_Strategy(c_control, 0, 0, keep_action)
-				continue
-			
-			# down
-			elif (player_top - adjust_top < -6):
-				# print("adjust down")
-				self.Update_Strategy(c_control, 0, 2, keep_action)
-				continue
-			
-			# left
-			elif (player_left - adjust_left > 6):
-				# print("adjust left")
-				self.Update_Strategy(c_control, 0, 3, keep_action)
-				continue
-			
-			# right
-			elif (player_left - adjust_left < -6):
-				# print("adjust right")
-				self.Update_Strategy(c_control, 0, 1, keep_action)
-				continue
+			if (player_dir == 1 or player_dir == 3):
+				if (player_top - adjust_top > 3):
+					self.Update_Strategy(c_control, 0, 0, keep_action)
+					continue
+
+			elif (player_dir == 0 or player_dir == 2):
+				if (player_left - adjust_left > 3):
+					self.Update_Strategy(c_control, 0, 3, keep_action)
+					continue
+
+			# up
+			# if (player_top - adjust_top < 6):
+			# 	# print("adjust up")
+			# 	self.Update_Strategy(c_control, 0, 0, keep_action)
+			# 	continue
+			# 
+			# # down
+			# elif (player_top - adjust_top < -6):
+			# 	# print("adjust down")
+			# 	self.Update_Strategy(c_control, 0, 2, keep_action)
+			# 	continue
+			# 
+			# # left
+			# elif (player_left - adjust_left > 6):
+			# 	# print("adjust left")
+			# 	self.Update_Strategy(c_control, 0, 3, keep_action)
+			# 	continue
+			# 
+			# # right
+			# elif (player_left - adjust_left < -6):
+			# 	# print("adjust right")
+			# 	self.Update_Strategy(c_control, 0, 1, keep_action)
+			# 	continue
 
 			# if ((player_dir == 0 or player_dir == 2) and (player_top % 32 < 27 and player_top % 32 > 5)):
 			# 	print "adjust top. player_top: %d,  player_left: %d" %(player_top, player_left)
