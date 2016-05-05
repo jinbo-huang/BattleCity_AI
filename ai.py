@@ -57,12 +57,12 @@ class ai_agent():
 			player_left = player[0][0]
 			player_top = player[0][1]
 
-			#q=0
-			#for i in range(1000):
-			#	q+=1
+			q=0
+			for i in range(1000):
+				q+=1
 
 			self.encode_map(bullets, enemies, tiles, player)
-			self.generate_dangerous_map(bullets)
+			
 
 			# print player
 
@@ -87,7 +87,7 @@ class ai_agent():
 			self.encoded_player_left = player_left / 32
 			self.encoded_player_top = player_top / 32
 
-			# 1. check if the position of player's tank is on the multiplier of 32
+			
 
 			# get player's direction
 			player_dir = player[1]
@@ -97,6 +97,26 @@ class ai_agent():
 
 			# print "player_top: %d,  player_left: %d" %(player_top, player_left)
 
+			
+
+			# 2. check nearest 5 blocks in every direction ( bullet, tank )
+			# check for bullets
+				
+			move = self.check_bullets(bullets)
+			if (move != -1):
+				# print "Found Bullet"
+				self.Update_Strategy(c_control, 1, move, 1)
+				continue
+
+
+			# check for tanks
+			move = self.check_tanks()
+			if (move != -1):
+				# print "Found Tank"
+				self.Update_Strategy(c_control, 1, move, 1)
+				continue
+
+			# 1. check if the position of player's tank is on the multiplier of 32
 			if (player_dir == 1 or player_dir == 3):
 				if (player_top - adjust_top > 3):
 					self.Update_Strategy(c_control, 0, 0, keep_action)
@@ -107,22 +127,8 @@ class ai_agent():
 					self.Update_Strategy(c_control, 0, 3, keep_action)
 					continue
 
-			# 2. check nearest 5 blocks in every direction ( bullet, tank )
-			# check for bullets
-				
-			move = self.check_bullets(bullets)
-			if (move != -1):
-				self.Update_Strategy(c_control, 1, move, 1)
-				continue
-
-			# check for tanks
-			move = self.check_tanks()
-			if (move != -1):
-				self.Update_Strategy(c_control, 1, move, 1)
-				continue
-
-
 			# 3. BFS
+			self.generate_dangerous_map(bullets, enemies)
 			move = self.bfs()
 			if (move == -1):
 				self.Update_Strategy(c_control, 0, move_dir, keep_action)
@@ -141,13 +147,13 @@ class ai_agent():
 			encoded_bullet_top = bullet[0][1] / 32
 			bullet_dir = bullet[1]
 
-			if (encoded_bullet_left / 32 == self.encoded_player_left / 32):
+			if (encoded_bullet_left == self.encoded_player_left):
 				if (encoded_bullet_top < self.encoded_player_top and bullet_dir == 2):
 					return 0
 				elif (encoded_bullet_top > self.encoded_player_top and bullet_dir == 0):
 					return 2
 
-			elif (bullet[0][1] / 32 == self.encoded_player_top / 32):
+			if (encoded_bullet_top == self.encoded_player_top):
 				if (encoded_bullet_left < self.encoded_player_left and bullet_dir == 1):
 					return 3
 				elif (encoded_bullet_left > self.encoded_player_left and bullet_dir == 3):
@@ -239,7 +245,7 @@ class ai_agent():
 			t_left = tile[0][0]
 			t_top = tile[0][1]
 			t_type = tile[1]
-			if (t_type == 1 or t_type == 2):
+			if (t_type == 1 or t_type == 2 or t_type == 3):
 				result[t_top / 32][t_left / 32] = '@'
 	
 		player_left = player[0][0]
@@ -249,9 +255,10 @@ class ai_agent():
 		
 		self.encoded_map = result
 
-	def generate_dangerous_map(self, bullets):
+	def generate_dangerous_map(self, bullets, enemies):
 		result = [[False for x in range(self.map_width)] for y in range(self.map_height)]
 		
+		# put positions that bullets may pass into dangerous map
 		for bullet in bullets:
 			b_left = bullet[0][0] / 32
 			b_top = bullet[0][1] / 32
@@ -267,9 +274,32 @@ class ai_agent():
 			current_left = b_left
 
 			# mark next 3 blocks as dangerous
-			for i in range(2):
+			for i in range(3):
 				current_top = current_top + self.dir_top[b_dir]
 				current_left = current_left + self.dir_left[b_dir]
+				if (current_left < 0 or current_left >= 13 or current_top < 0 or current_top >= 13):
+					continue;
+				result[current_top][current_left] = True
+		
+		# put positions that tanks may shoot into dangerous map
+		for enemy in enemies:
+			e_left = enemy[0][0] / 32
+			e_top = enemy[0][1] / 32
+			e_dir = enemy[1]
+
+			# This situation happened before, but still reason is unknown.
+			if (e_left < 0 or e_left >= 13 or e_top < 0 or e_top >= 13):
+				continue;
+			
+			result[e_top][e_left] = True
+
+			current_top = e_top
+			current_left = e_left
+
+			# mark next 2 blocks as dangerous
+			for i in range(2):
+				current_top = current_top + self.dir_top[e_dir]
+				current_left = current_left + self.dir_left[e_dir]
 				if (current_left < 0 or current_left >= 13 or current_top < 0 or current_top >= 13):
 					continue;
 				result[current_top][current_left] = True
