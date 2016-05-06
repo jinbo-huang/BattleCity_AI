@@ -26,6 +26,9 @@ class ai_agent():
 		#	dangerous location (bullets may pass in near time)
 		self.dangerous_map = []
 
+		# adjusting
+		self.adjusting = False
+
 	# rect:					[left, top, width, height]
 	# rect_type:			0:empty 1:brick 2:steel 3:water 4:grass 5:froze
 	# castle_rect:			[12*16, 24*16, 32, 32]
@@ -60,6 +63,8 @@ class ai_agent():
 			q=0
 			for i in range(1000):
 				q+=1
+
+			# print bullets
 
 			self.encode_map(bullets, enemies, tiles, player)
 			
@@ -98,7 +103,6 @@ class ai_agent():
 			# print "player_top: %d,  player_left: %d" %(player_top, player_left)
 
 			
-
 			# 2. check nearest 5 blocks in every direction ( bullet, tank )
 			# check for bullets
 				
@@ -118,12 +122,14 @@ class ai_agent():
 
 			# 1. check if the position of player's tank is on the multiplier of 32
 			if (player_dir == 1 or player_dir == 3):
-				if (player_top - adjust_top > 3):
+				if (player_top - adjust_top > 5):
+					# print "adjust left"
 					self.Update_Strategy(c_control, 0, 0, keep_action)
 					continue
 
 			elif (player_dir == 0 or player_dir == 2):
-				if (player_left - adjust_left > 3):
+				if (player_left - adjust_left > 5):
+					# print "adjust left"
 					self.Update_Strategy(c_control, 0, 3, keep_action)
 					continue
 
@@ -131,7 +137,8 @@ class ai_agent():
 			self.generate_dangerous_map(bullets, enemies)
 			move = self.bfs()
 			if (move == -1):
-				self.Update_Strategy(c_control, 0, move_dir, keep_action)
+				move = random.randint(0,4)
+				self.Update_Strategy(c_control, 0, move, keep_action)
 			else:
 				self.Update_Strategy(c_control, 0, move, keep_action)
 			#keep_action = 0
@@ -145,6 +152,8 @@ class ai_agent():
 		for bullet in bullets:
 			encoded_bullet_left = bullet[0][0] / 32
 			encoded_bullet_top = bullet[0][1] / 32
+			encoded_bullet_right = (bullet[0][0] + bullet[0][2]) / 32
+			encoded_bullet_bottom = (bullet[0][1] + bullet[0][3]) / 32
 			bullet_dir = bullet[1]
 
 			if (encoded_bullet_left == self.encoded_player_left):
@@ -168,7 +177,7 @@ class ai_agent():
 			for j in range(5):
 				current_left = current_left + self.dir_left[i]
 				current_top = current_top + self.dir_top[i]
-				if (current_left < 0 or current_left >= 13 or current_top < 0 or current_top >= 13):
+				if (current_left < 0 or current_left >= 13 or current_top < 0 or current_top >= 13 or self.encoded_map[current_top][current_left] == '@'):
 					break
 				if (self.encoded_map[current_top][current_left] == 'E'):
 					return i
@@ -232,9 +241,14 @@ class ai_agent():
 		for bullet in bullets:
 			b_left = bullet[0][0] / 32
 			b_top = bullet[0][1] / 32
-			if (b_left < 0 or b_left >= 13 or b_top < 0 or b_top >= 13):
-				continue;
-			result[b_top][b_left] = 'B'
+			if (b_left >= 0 and b_left < 13 and b_top >= 0 and b_top < 13):
+				result[b_top][b_left] = 'B'
+
+			b_right = (bullet[0][0] + bullet[0][2]) / 32
+			b_bottom = (bullet[0][1] + bullet[0][3]) / 32
+			if (b_right >= 0 and b_right < 13 and b_bottom >= 0 and b_bottom < 13):
+				result[b_bottom][b_right] = 'B'
+			
 
 		for enemy in enemies:
 			e_left = enemy[0][0]
@@ -262,24 +276,30 @@ class ai_agent():
 		for bullet in bullets:
 			b_left = bullet[0][0] / 32
 			b_top = bullet[0][1] / 32
+			b_right = (bullet[0][0] + bullet[0][2]) / 32
+			b_bottom = (bullet[0][1] + bullet[0][3]) / 32
 			b_dir = bullet[1]
 
 			# This situation happened before, but still reason is unknown.
-			if (b_left < 0 or b_left >= 13 or b_top < 0 or b_top >= 13):
-				continue;
-			
-			result[b_top][b_left] = True
+			if (b_left >= 0 and b_left < 13 and b_top >= 0 and b_top < 13):
+				result[b_top][b_left] = True			
 
 			current_top = b_top
 			current_left = b_left
+			current_bottom = b_bottom
+			current_right = b_right
 
 			# mark next 3 blocks as dangerous
 			for i in range(3):
 				current_top = current_top + self.dir_top[b_dir]
 				current_left = current_left + self.dir_left[b_dir]
-				if (current_left < 0 or current_left >= 13 or current_top < 0 or current_top >= 13):
-					continue;
-				result[current_top][current_left] = True
+				current_bottom = current_bottom + self.dir_top[b_dir]
+				current_right = current_right + self.dir_left[b_dir]
+				if (current_left >= 0 and current_left < 13 and current_top >= 0 and current_top < 13):
+					result[current_top][current_left] = True
+				if (current_right >= 0 and current_right < 13 and current_bottom >= 0 and current_bottom < 13):
+					result[current_bottom][current_right] = True
+
 		
 		# put positions that tanks may shoot into dangerous map
 		for enemy in enemies:
