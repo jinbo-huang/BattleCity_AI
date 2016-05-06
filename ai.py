@@ -92,8 +92,6 @@ class ai_agent():
 			self.encoded_player_left = player_left / 32
 			self.encoded_player_top = player_top / 32
 
-			
-
 			# get player's direction
 			player_dir = player[1]
 
@@ -102,10 +100,14 @@ class ai_agent():
 
 			# print "player_top: %d,  player_left: %d" %(player_top, player_left)
 
-			
+			move = self.dodge_bullets(bullets, player_top, player_left)
+			if (move != -1):
+				print "Dodge Bullet"
+				self.Update_Strategy(c_control, 1, move, 1)
+				continue
+
 			# 2. check nearest 5 blocks in every direction ( bullet, tank )
 			# check for bullets
-				
 			move = self.check_bullets(bullets)
 			if (move != -1):
 				# print "Found Bullet"
@@ -147,6 +149,32 @@ class ai_agent():
 			#-----------
 			# self.Update_Strategy(c_control,shoot,move_dir,keep_action)
 		#------------------------------------------------------------------------------------------------------
+	
+	def dodge_bullets(self, bullets, player_top, player_left):
+		for bullet in bullets:
+			bullet_top = bullet[0][1]
+			bullet_left = bullet[0][0]
+			bullet_bottom = bullet[0][1] + bullet[0][3]
+			bullet_right = bullet[0][0] + bullet[0][2]
+			bullet_dir = bullet[1]
+			# top part of player tank
+			if (bullet_bottom > player_top and bullet_bottom <= player_top + 10):
+				if ((player_left < bullet_left and player_left + 65 > bullet_left and bullet_dir == 3) or (player_left > bullet_left and player_left - 65 < bullet_left and  bullet_dir == 1)):
+					return 2
+			# bottom part of player tank
+			if (bullet_top > player_top + 16 and bullet_top <= player_top + 26):
+				if ((player_left < bullet_left and player_left + 65 > bullet_left and bullet_dir == 3) or (player_left > bullet_left and player_left - 65 < bullet_left and bullet_dir == 1)):
+					return 0
+			# left part of player tank
+			if (bullet_right > player_left and bullet_right <= player_left + 10):
+				if ((player_top < bullet_top and player_top + 65 > bullet_top and bullet_dir == 0) or (player_top > bullet_top and player_top - 65 < bullet_top and bullet_dir == 2)):
+					return 1
+			# right part of player tank
+			if (bullet_left > player_left + 16 and bullet_left <= player_left + 26):
+				if ((player_top < bullet_top and player_top + 65 > bullet_top and bullet_dir == 0) or (player_top > bullet_top and player_top - 65 < bullet_top and bullet_dir == 2)):
+					return 3
+
+		return -1
 
 	def check_bullets(self, bullets):
 		for bullet in bullets:
