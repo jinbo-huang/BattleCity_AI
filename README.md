@@ -7,5 +7,5 @@ An player AI agent for game Battle City
  3. Shoot when there are tanks bullets around the player tank.
 
 
- ## Mechanism
- Coming Soon
+## Mechanism
+Coming Soon
