@@ -61,7 +61,7 @@ class ai_agent():
 			player_top = player[0][1]
 
 			q=0
-			for i in range(1000):
+			for i in range(100):
 				q+=1
 
 			# print bullets
@@ -99,12 +99,24 @@ class ai_agent():
 			adjust_left = self.encoded_player_left * 32
 
 			# print "player_top: %d,  player_left: %d" %(player_top, player_left)
-
 			move = self.dodge_bullets(bullets, player_top, player_left)
 			if (move != -1):
 				print "Dodge Bullet"
-				self.Update_Strategy(c_control, 1, move, 1)
+				self.Update_Strategy(c_control, 0, move, 1)
 				continue
+
+			# 1. check if the position of player's tank is on the multiplier of 32
+			if (player_dir == 1 or player_dir == 3):
+				if (player_top - adjust_top > 5):
+					# print "adjust left"
+					self.Update_Strategy(c_control, 0, 0, keep_action)
+					continue
+
+			elif (player_dir == 0 or player_dir == 2):
+				if (player_left - adjust_left > 5):
+					# print "adjust left"
+					self.Update_Strategy(c_control, 0, 3, keep_action)
+					continue
 
 			# 2. check nearest 5 blocks in every direction ( bullet, tank )
 			# check for bullets
@@ -122,18 +134,6 @@ class ai_agent():
 				self.Update_Strategy(c_control, 1, move, 1)
 				continue
 
-			# 1. check if the position of player's tank is on the multiplier of 32
-			if (player_dir == 1 or player_dir == 3):
-				if (player_top - adjust_top > 5):
-					# print "adjust left"
-					self.Update_Strategy(c_control, 0, 0, keep_action)
-					continue
-
-			elif (player_dir == 0 or player_dir == 2):
-				if (player_left - adjust_left > 5):
-					# print "adjust left"
-					self.Update_Strategy(c_control, 0, 3, keep_action)
-					continue
 
 			# 3. BFS
 			self.generate_dangerous_map(bullets, enemies)
@@ -151,27 +151,30 @@ class ai_agent():
 		#------------------------------------------------------------------------------------------------------
 	
 	def dodge_bullets(self, bullets, player_top, player_left):
+		range = 100
 		for bullet in bullets:
 			bullet_top = bullet[0][1]
 			bullet_left = bullet[0][0]
 			bullet_bottom = bullet[0][1] + bullet[0][3]
 			bullet_right = bullet[0][0] + bullet[0][2]
+			bullet_h_mid = (bullet_top + bullet_bottom) / 2
+			bullet_v_mid = (bullet_left + bullet_right) / 2
 			bullet_dir = bullet[1]
 			# top part of player tank
-			if (bullet_bottom > player_top and bullet_bottom <= player_top + 10):
-				if ((player_left < bullet_left and player_left + 65 > bullet_left and bullet_dir == 3) or (player_left > bullet_left and player_left - 65 < bullet_left and  bullet_dir == 1)):
+			if ((bullet_bottom > player_top and bullet_bottom <= player_top + 10) or (bullet_h_mid > player_top and bullet_h_mid <= player_top + 10)):
+				if ((player_left < bullet_left and player_left + range > bullet_left and bullet_dir == 3) or (player_left > bullet_left and player_left - range < bullet_left and  bullet_dir == 1)):
 					return 2
 			# bottom part of player tank
-			if (bullet_top > player_top + 16 and bullet_top <= player_top + 26):
-				if ((player_left < bullet_left and player_left + 65 > bullet_left and bullet_dir == 3) or (player_left > bullet_left and player_left - 65 < bullet_left and bullet_dir == 1)):
+			if ((bullet_top > player_top + 16 and bullet_top <= player_top + 26) or (bullet_h_mid > player_top + 16 and bullet_h_mid <= player_top + 26)):
+				if ((player_left < bullet_left and player_left + range > bullet_left and bullet_dir == 3) or (player_left > bullet_left and player_left - range < bullet_left and bullet_dir == 1)):
 					return 0
 			# left part of player tank
-			if (bullet_right > player_left and bullet_right <= player_left + 10):
-				if ((player_top < bullet_top and player_top + 65 > bullet_top and bullet_dir == 0) or (player_top > bullet_top and player_top - 65 < bullet_top and bullet_dir == 2)):
+			if ((bullet_right > player_left and bullet_right <= player_left + 10) or (bullet_v_mid > player_left and bullet_v_mid <= player_left + 10)):
+				if ((player_top < bullet_top and player_top + range > bullet_top and bullet_dir == 0) or (player_top > bullet_top and player_top - range < bullet_top and bullet_dir == 2)):
 					return 1
 			# right part of player tank
-			if (bullet_left > player_left + 16 and bullet_left <= player_left + 26):
-				if ((player_top < bullet_top and player_top + 65 > bullet_top and bullet_dir == 0) or (player_top > bullet_top and player_top - 65 < bullet_top and bullet_dir == 2)):
+			if (bullet_left > player_left + 16 and bullet_left <= player_left + 26 or (bullet_v_mid > player_left + 16 and bullet_v_mid <= player_left + 26)):
+				if ((player_top < bullet_top and player_top + range > bullet_top and bullet_dir == 0) or (player_top > bullet_top and player_top - range < bullet_top and bullet_dir == 2)):
 					return 3
 
 		return -1
@@ -318,7 +321,7 @@ class ai_agent():
 			current_right = b_right
 
 			# mark next 3 blocks as dangerous
-			for i in range(3):
+			for i in range(4):
 				current_top = current_top + self.dir_top[b_dir]
 				current_left = current_left + self.dir_left[b_dir]
 				current_bottom = current_bottom + self.dir_top[b_dir]
